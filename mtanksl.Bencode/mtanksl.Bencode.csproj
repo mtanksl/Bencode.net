@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Product>Bencode</Product>
+    <Company>mtanksl</Company>
+    <Authors>mtank</Authors>
+    <PackageProjectUrl></PackageProjectUrl>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <RepositoryUrl>https://github.com/mtanksl/Bencode.net</RepositoryUrl>
+    <Description>An implementation in C# of B-encode format that is used by the peer-to-peer file sharing system BitTorrent.</Description>
+    <Copyright>2025 mtanksl</Copyright>
+    <PackageTags>benconde bittorrent csharp implementation serialization deserialization</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
+
+</Project>

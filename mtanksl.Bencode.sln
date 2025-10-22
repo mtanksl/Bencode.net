@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36603.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mtanksl.Bencode", "mtanksl.Bencode\mtanksl.Bencode.csproj", "{1702FD79-4063-BF78-C2A0-CD0DECF3A36E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mtanksl.Bencode.Tests", "mtanksl.Bencode.Tests\mtanksl.Bencode.Tests.csproj", "{FC46187C-094B-4EF7-952E-4DA96769E35A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1702FD79-4063-BF78-C2A0-CD0DECF3A36E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1702FD79-4063-BF78-C2A0-CD0DECF3A36E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1702FD79-4063-BF78-C2A0-CD0DECF3A36E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1702FD79-4063-BF78-C2A0-CD0DECF3A36E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC46187C-094B-4EF7-952E-4DA96769E35A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC46187C-094B-4EF7-952E-4DA96769E35A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC46187C-094B-4EF7-952E-4DA96769E35A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC46187C-094B-4EF7-952E-4DA96769E35A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {054C6113-8D7C-42CA-A180-D2C0147864D7}
+	EndGlobalSection
+EndGlobal
