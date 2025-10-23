@@ -6,7 +6,7 @@ An implementation in C# of B-encode format that is used by the peer-to-peer file
 ![Nuget](https://img.shields.io/nuget/v/mtanksl.Bencode)
 
 ```
-dotnet add package mtanksl.Bencode --version 1.0.1
+dotnet add package mtanksl.Bencode --version 1.0.2
 ```
 
 # Specification
