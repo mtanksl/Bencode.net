@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -29,7 +30,7 @@ namespace mtanksl.Bencode
 
             if (value == -1)
             {
-                throw new BencodeException();
+                throw new BencodeException("End of stream.");
             }
 
             return (char)value;
@@ -43,7 +44,7 @@ namespace mtanksl.Bencode
 
             if (value == -1)
             {
-                throw new BencodeException();
+                throw new BencodeException("End of stream.");
             }
 
             return (char)value;
@@ -57,7 +58,7 @@ namespace mtanksl.Bencode
 
             if (textReader.ReadBlock(buffer, 0, buffer.Length) != length)
             {
-                throw new BencodeException();
+                throw new BencodeException("End of stream.");
             }
 
             return new string(buffer);
@@ -75,7 +76,7 @@ namespace mtanksl.Bencode
 
                 if (value == -1)
                 {
-                    throw new BencodeException();
+                    throw new BencodeException("End of stream.");
                 }
 
                 if (value == character)
@@ -89,39 +90,100 @@ namespace mtanksl.Bencode
             return stringBuilder.ToString();
         }
 
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="BencodeException"></exception>
         /// 
-        public object ReadObject()
+        public T ReadObject<T>()
+        {
+            return (T)ReadObject(typeof(T) );
+        }
+
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="BencodeException"></exception>
+        /// 
+        public object ReadObject(Type type)
 		{
-            switch (Peek() )
+            if (type == null)
             {
-                case '0':
-                case '1':
-                case '2':
-                case '3':
-                case '4':
-                case '5':
-                case '6':
-                case '7':
-                case '8':
-                case '9':
-
-                    return ReadString();
-
-                case 'i':
-
-                    return ReadInteger();
-
-                case 'l':
-
-                    return ReadList();
-
-                case 'd':
-
-                    return ReadDictionary();
+				throw new ArgumentNullException(nameof(type) );
             }
 
-            throw new BencodeException();
+            if (typeof(IBencodeSerializable).IsAssignableFrom(type) )
+            {
+                var value = (IBencodeSerializable)Activator.CreateInstance(type);
+
+                value.Read(this);
+
+                return value;
+            }
+            else if (type == typeof(string) )
+            {
+                return ReadString();
+            }
+            else if (type == typeof(sbyte) || type == typeof(byte) || type == typeof(short) || type == typeof(ushort) || type == typeof(int) || type == typeof(uint) || type == typeof(long) || type == typeof(ulong) )
+            {
+                return ReadInteger();
+            }
+            else if (typeof(IList).IsAssignableFrom(type) )
+            {
+                if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>) )
+                {
+                    var genericArguments = type.GetGenericArguments();
+
+                    return ReadList(genericArguments[0] );
+                }
+                else
+                {
+                    return ReadList(typeof(object) );
+                }
+            }
+            else if (typeof(IDictionary).IsAssignableFrom(type) )
+            {
+                if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>) )
+                {
+                    var genericArguments = type.GetGenericArguments();
+
+                    return ReadDictionary(genericArguments[0], genericArguments[1] );
+                }
+                else
+                {
+                    return ReadDictionary(typeof(object), typeof(object) );
+                }
+            }
+            else
+            {
+                switch (Peek() )
+                {
+                    case '0':
+                    case '1':
+                    case '2':
+                    case '3':
+                    case '4':
+                    case '5':
+                    case '6':
+                    case '7':
+                    case '8':
+                    case '9':
+
+                        return ReadString();
+
+                    case 'i':
+
+                        return ReadInteger();
+
+                    case 'l':
+
+                        return ReadList(typeof(object) );
+
+                    case 'd':
+
+                        return ReadDictionary(typeof(object), typeof(object) );
+
+                    default:
+
+                        throw new BencodeException("Invalid token.");
+                }
+            }
         }
 
         /// <exception cref="BencodeException"></exception>
@@ -130,15 +192,10 @@ namespace mtanksl.Bencode
 		{
             if (int.TryParse(ReadUntil(':'), out var length) && length >= 0)
             {
-                if (length > 0)
-                {
-                    return Read(length);
-                }
-
-                return null;
+                return Read(length);
             }
 
-            throw new BencodeException();
+            throw new BencodeException("Invalid string.");
         }
 
         /// <exception cref="BencodeException"></exception>
@@ -150,41 +207,34 @@ namespace mtanksl.Bencode
                 return value;
             }
 
-            throw new BencodeException();
+            throw new BencodeException("Invalid integer.");
         }
 
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="BencodeException"></exception>
         /// 
-        private List<object> ReadList()
+        public List<T> ReadList<T>()
         {
-            if (Read() == 'l')
-            {
-                var value = new List<object>();
-
-                while (Peek() != 'e')
-                {
-                    value.Add(ReadObject() );
-                }
-
-                Read();
-
-                return value;
-            }
-
-            throw new BencodeException();
+            return (List<T>)ReadList(typeof(T) );
         }
 
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="BencodeException"></exception>
-        ///
-        private Dictionary<object, object> ReadDictionary()
+        /// 
+        public IList ReadList(Type type)
         {
-			if (Read() == 'd')
+            if (type == null)
             {
-                var value = new Dictionary<object, object>();
+                throw new ArgumentNullException(nameof(type) );
+            }
+
+            if (Read() == 'l')
+            {
+                var value = (IList)Activator.CreateInstance( typeof(List<>).MakeGenericType(type) );
 
                 while (Peek() != 'e')
                 {
-                    value.Add(ReadObject(), ReadObject() );
+                    value.Add(ReadObject(type) );
                 }
 
                 Read();
@@ -192,7 +242,47 @@ namespace mtanksl.Bencode
                 return value;
             }
 
-            throw new BencodeException();
+            throw new BencodeException("Invalid list.");
+        }
+
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="BencodeException"></exception>
+        /// 
+        public Dictionary<TKey, TValue> ReadDictionary<TKey, TValue>()
+        {
+            return (Dictionary<TKey, TValue>)ReadDictionary(typeof(TKey), typeof(TValue) );
+        }
+
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="BencodeException"></exception>
+        /// 
+        public IDictionary ReadDictionary(Type typeKey, Type typeValue)
+        {
+            if (typeKey == null)
+            {
+                throw new ArgumentNullException(nameof(typeKey) );
+            }
+
+            if (typeValue == null)
+            {
+                throw new ArgumentNullException(nameof(typeValue) );
+            }
+
+            if (Read() == 'd')
+            {
+                var value = (IDictionary)Activator.CreateInstance( typeof(Dictionary<,>).MakeGenericType(typeKey, typeValue) );
+
+                while (Peek() != 'e')
+                {
+                    value.Add(ReadObject(typeKey), ReadObject(typeValue) );
+                }
+
+                Read();
+
+                return value;
+            }
+
+            throw new BencodeException("Invalid dictionary.");
         }
 
         public void Dispose()

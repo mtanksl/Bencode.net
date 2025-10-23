@@ -6,9 +6,17 @@ namespace mtanksl.Bencode.Tests
     public sealed class PrimitiveDeserialization
     {
         [TestMethod]
+        public void TestEmptyString()
+        {
+            var value = BencodeConvert.DeserializeObject<string>("0:");
+
+            Assert.AreEqual("", value);
+        }
+
+        [TestMethod]
         public void TestString()
         {
-            var value = BencodeConvert.DeserializeObject<string>("11:Hello World"); // "Hello World"
+            var value = BencodeConvert.DeserializeObject<string>("11:Hello World");
 
             Assert.AreEqual("Hello World", value);
         }
@@ -16,7 +24,7 @@ namespace mtanksl.Bencode.Tests
         [TestMethod]
         public void TestInteger()
         {
-            var value = BencodeConvert.DeserializeObject<long>("i9223372036854775807e"); // 9223372036854775807L
+            var value = BencodeConvert.DeserializeObject<long>("i9223372036854775807e");
 
             Assert.AreEqual(9223372036854775807L, value);
         }
@@ -24,23 +32,23 @@ namespace mtanksl.Bencode.Tests
         [TestMethod]
         public void TestList()
         {
-            var value = BencodeConvert.DeserializeObject<List<object>>("l11:Hello Worldi9223372036854775807ee"); // new List<object>() { "Hello World", 9223372036854775807L }
+            var value = BencodeConvert.DeserializeObject<List<object>>("l11:Hello Worldi9223372036854775807ee");
 
-            Assert.AreEqual(value.Count, 2);
+            Assert.AreEqual(2, value.Count);
 
-            Assert.AreEqual(value[0], "Hello World");
+            Assert.AreEqual("Hello World", value[0] );
 
-            Assert.AreEqual(value[1], 9223372036854775807L);
+            Assert.AreEqual(9223372036854775807L, value[1] );
         }
 
         [TestMethod]
         public void TestDictionary()
         {
-            var value = BencodeConvert.DeserializeObject<Dictionary<object, object>>("d11:Hello Worldi9223372036854775807ee"); // new Dictionary<object, object>() { ["Hello World"] = 9223372036854775807L } 
+            var value = BencodeConvert.DeserializeObject<Dictionary<object, object>>("d11:Hello Worldi9223372036854775807ee");
 
-            Assert.AreEqual(value.Count, 1);
+            Assert.AreEqual(1, value.Count);
             
-            Assert.AreEqual(value["Hello World"], 9223372036854775807L);
+            Assert.AreEqual(9223372036854775807L, value["Hello World"] );
         }
     }
 }

@@ -6,6 +6,14 @@ namespace mtanksl.Bencode.Tests
     public sealed class PrimitiveSerialization
     {
         [TestMethod]
+        public void TestEmptyString()
+        {
+            var bencode = BencodeConvert.SerializeObject("");
+       
+            Assert.AreEqual("0:", bencode);
+        }
+
+        [TestMethod]
         public void TestString()
         {
             var bencode = BencodeConvert.SerializeObject("Hello World");

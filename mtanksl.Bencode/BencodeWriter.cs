@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections;
 using System.IO;
 
 namespace mtanksl.Bencode
@@ -25,30 +25,36 @@ namespace mtanksl.Bencode
         /// 
         public void WriteObject(object value)
         {
-			if (value == null)
-			{
+            if (value == null)
+            {
                 throw new ArgumentNullException(nameof(value) );
             }
 
-            if (value is string)
+            var type = value.GetType();
+
+            if (typeof(IBencodeSerializable).IsAssignableFrom(type) )
+            {
+                ( (IBencodeSerializable)value).Write(this);
+            }
+            else if (type == typeof(string) )
             {
                 WriteString( (string)value);
             }
-            else if (value is sbyte || value is byte || value is short || value is ushort || value is int || value is uint || value is long || value is ulong)
+            else if (type == typeof(sbyte) || type == typeof(byte) || type == typeof(short) || type == typeof(ushort) || type == typeof(int) || type == typeof(uint) || type == typeof(long) || type == typeof(ulong) )
             {
                 WriteInteger( (long)value);
             }
-            else if (value is IEnumerable<object>)
+            else if (typeof(IList).IsAssignableFrom(type) )
             {
-                WriteList( (IEnumerable<object>)value);
+                WriteList( (IList)value);
             }
-            else if (value is IEnumerable<KeyValuePair<object, object>>)
-            {
-                WriteDictionary( (IEnumerable<KeyValuePair<object, object>>)value);
+            else if (typeof(IDictionary).IsAssignableFrom(type) )
+            {                                
+                WriteDictionary( (IDictionary)value);
             }
             else
             {
-                throw new NotSupportedException();
+                throw new NotSupportedException("Only string, integers, IList, IDicionary and IBencodeSerializable are supported.");
             }
         }
 
@@ -58,8 +64,10 @@ namespace mtanksl.Bencode
 			{
                 textWriter.Write("0:");
 			}
-
-            textWriter.Write(value.Length + ":" + value);
+            else
+            {
+                textWriter.Write(value.Length + ":" + value);
+            }
         }
 
         public void WriteInteger(long value)
@@ -67,41 +75,38 @@ namespace mtanksl.Bencode
             textWriter.Write("i" + value + "e");
         }
 
-        /// <exception cref="ArgumentNullException"></exception>
-        /// 
-        public void WriteList(IEnumerable<object> value)
+        public void WriteList(IList value)
         {
-			if (value == null)
-			{
-				throw new ArgumentNullException(nameof(value) );
-			}
-
             textWriter.Write("l");
 
-            foreach (var item in value)
+            if (value != null)
             {
-                WriteObject(item);
+                foreach (var item in value)
+                {
+                    if (item != null)
+                    {
+                        WriteObject(item);
+                    }
+                }
             }
 
             textWriter.Write("e");
         }
-
-        /// <exception cref="ArgumentNullException"></exception>
-        /// 
-        public void WriteDictionary(IEnumerable<KeyValuePair<object, object>> value)
+        public void WriteDictionary(IDictionary value)
         {
-			if (value == null)
-			{
-				throw new ArgumentNullException(nameof(value) );
-			}
-
             textWriter.Write("d");
 
-            foreach (var item in value)
+            if (value != null)
             {
-                WriteObject(item.Key);
-
-                WriteObject(item.Value);
+                foreach (var key in value.Keys)
+                {
+                    if (key != null && value[key] != null)
+                    {
+                        WriteObject(key);
+                         
+                        WriteObject(value[key] );
+                    }
+                }
             }
 
             textWriter.Write("e");

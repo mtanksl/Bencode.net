@@ -10,7 +10,7 @@ namespace mtanksl.Bencode
         /// 
         public static string SerializeObject(object value)
         {
-			if (value == null)
+            if (value == null)
 			{
                 throw new ArgumentNullException(nameof(value) );
             }
@@ -31,18 +31,7 @@ namespace mtanksl.Bencode
         /// 
 		public static object DeserializeObject(string bencode)
         {
-			if (string.IsNullOrEmpty(bencode) )
-			{
-				throw new ArgumentNullException(nameof(bencode) );
-			}
-
-            using (var stringReader = new StringReader(bencode) )
-            {
-                using (var reader = new BencodeReader(stringReader) )
-                {
-                    return reader.ReadObject();
-                }
-            }
+            return DeserializeObject(bencode, typeof(object) );
         }
 
         /// <exception cref="ArgumentNullException"></exception>
@@ -50,7 +39,31 @@ namespace mtanksl.Bencode
         /// 
         public static T DeserializeObject<T>(string bencode)
         {
-            return (T)DeserializeObject(bencode);
+            return (T)DeserializeObject(bencode, typeof(T) );
+        }
+
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="BencodeException"></exception>
+        /// 
+        public static object DeserializeObject(string bencode, Type type)
+        {
+            if (string.IsNullOrEmpty(bencode) )
+			{
+				throw new ArgumentNullException(nameof(bencode) );
+			}
+
+            if (type == null)
+            {
+				throw new ArgumentNullException(nameof(type) );
+            }
+
+            using (var stringReader = new StringReader(bencode) )
+            {
+                using (var reader = new BencodeReader(stringReader) )
+                {
+                    return reader.ReadObject(type);
+                }
+            }
         }
     }
 }
