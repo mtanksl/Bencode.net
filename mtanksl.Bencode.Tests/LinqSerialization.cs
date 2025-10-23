@@ -6,21 +6,6 @@ namespace mtanksl.Bencode.Tests
     public sealed class LinqSerialization
     {
         [TestMethod]
-        public void TestLinq()
-        {
-            var value = 
-                new BDictionary(
-                    new BPair("key 1", ""),
-                    new BPair("key 3", 9223372036854775807L),
-                    new BPair("key 2", "Hello World"),
-                    new BPair("key 4", new BList("", "Hello World", 9223372036854775807L) ) );
-
-            var benconde = BencodeConvert.SerializeObject(value);
-
-            Assert.AreEqual("d5:key 10:5:key 211:Hello World5:key 3i9223372036854775807e5:key 4l0:11:Hello Worldi9223372036854775807eee", benconde);
-        }
-
-        [TestMethod]
         public void TestEmptyString()
         {
             var bencode = BencodeConvert.SerializeObject(new BString("") );
@@ -58,6 +43,21 @@ namespace mtanksl.Bencode.Tests
             var bencode = BencodeConvert.SerializeObject(new BDictionary(new BPair(new BString("Hello World"), new BNumber(9223372036854775807L) ) ) );
 
             Assert.AreEqual("d11:Hello Worldi9223372036854775807ee", bencode);
+        }
+                        
+        [TestMethod]
+        public void TestLinq()
+        {
+            var value = 
+                new BDictionary(
+                    new BPair("key 1", ""),
+                    new BPair("key 3", 9223372036854775807L),
+                    new BPair("key 2", "Hello World"),
+                    new BPair("key 4", new BList("", "Hello World", 9223372036854775807L) ) );
+
+            var benconde = BencodeConvert.SerializeObject(value);
+
+            Assert.AreEqual("d5:key 10:5:key 211:Hello World5:key 3i9223372036854775807e5:key 4l0:11:Hello Worldi9223372036854775807eee", benconde);
         }
     }
 }

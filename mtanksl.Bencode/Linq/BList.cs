@@ -20,11 +20,12 @@ namespace mtanksl.Bencode.Linq
         {
             get
             {
-                return Value[index];
-            }
-            set
-            {
-                Value[index] = value;
+                if (0 <= index && index < Value.Count)
+                {
+                    return Value[index];
+                }
+
+                return null;
             }
         }
 

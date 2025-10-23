@@ -116,24 +116,44 @@ namespace mtanksl.Bencode
                 value.Read(this);
 
                 return value;
+            }           
+            else if (type == typeof(string) )
+            {
+                return ReadString();
             }
             else if (type == typeof(BString) )
             {
                 return new BString(ReadString() );
             }
+            else if (type == typeof(sbyte) || type == typeof(byte) || type == typeof(short) || type == typeof(ushort) || type == typeof(int) || type == typeof(uint) || type == typeof(long) || type == typeof(ulong) )
+            {
+                return Convert.ChangeType(ReadNumber(), type);
+            }
             else if (type == typeof(BNumber) )
             {
                 return new BNumber(ReadNumber() );
+            }
+            else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>) )
+            {
+                var genericArguments = type.GetGenericArguments();
+
+                return ReadList(genericArguments[0] );
             }
             else if (type == typeof(BList) )
             {
                 return new BList( (IList<BElement>)ReadList(typeof(BElement) ) );
             }
+            else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(SortedDictionary<,>) )
+            { 
+                var genericArguments = type.GetGenericArguments();
+
+                return ReadDictionary(genericArguments[0], genericArguments[1] );
+            }
             else if (type == typeof(BDictionary) )
             {
                 return new BDictionary( (IDictionary<BString, BElement>)ReadDictionary(typeof(BString), typeof(BElement) ) );
             }
-            else if (type == typeof(BElement) || type == typeof(object) )
+            else if (type == typeof(object) || type == typeof(BElement) )
             {
                 switch (Peek() )
                 {
@@ -163,27 +183,7 @@ namespace mtanksl.Bencode
                         return new BDictionary( (IDictionary<BString, BElement>)ReadDictionary(typeof(BString), typeof(BElement) ) );
                 }
             }
-            else if (type == typeof(string) )
-            {
-                return ReadString();
-            }
-            else if (type == typeof(sbyte) || type == typeof(byte) || type == typeof(short) || type == typeof(ushort) || type == typeof(int) || type == typeof(uint) || type == typeof(long) || type == typeof(ulong) )
-            {
-                return Convert.ChangeType(ReadNumber(), type);
-            }
-            else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>) )
-            {
-                var genericArguments = type.GetGenericArguments();
 
-                return ReadList(genericArguments[0] );
-            }
-            else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(SortedDictionary<,>) )
-            { 
-                var genericArguments = type.GetGenericArguments();
-
-                return ReadDictionary(genericArguments[0], genericArguments[1] );
-            }
-                                 
             throw new BencodeException("Invalid type.");
         }
 

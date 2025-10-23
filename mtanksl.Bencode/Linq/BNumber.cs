@@ -1,4 +1,6 @@
-﻿namespace mtanksl.Bencode.Linq
+﻿using System;
+
+namespace mtanksl.Bencode.Linq
 {
     public class BNumber : BElement
     {
@@ -23,8 +25,25 @@
             return new BNumber(value);
         }
 
+        public static explicit operator long?(BNumber value)
+        {
+            if (value == null)
+            {
+                return null;
+            }
+
+            return value.Value;
+        }
+
+        /// <exception cref="ArgumentNullException"></exception>
+        /// 
         public static explicit operator long(BNumber value)
         {
+            if (value == null)
+            {
+                throw new ArgumentNullException(nameof(value) );
+            }
+
             return value.Value;
         }
     }

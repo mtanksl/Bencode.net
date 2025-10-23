@@ -37,6 +37,11 @@ namespace mtanksl.Bencode.Linq
 
         public static explicit operator string(BString value)
         {
+            if (value == null)
+            {
+                return null;
+            }
+
             return value.Value;
         }
     }

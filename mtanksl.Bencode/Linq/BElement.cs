@@ -24,6 +24,11 @@ namespace mtanksl.Bencode.Linq
         /// 
         public static explicit operator string(BElement value)
         {
+            if (value == null)
+            {
+                return null;
+            }
+
             if (value is BString)
             {
                 return ( (BString)value).Value;
@@ -39,8 +44,31 @@ namespace mtanksl.Bencode.Linq
 
         /// <exception cref="FormatException"></exception>
         /// 
+        public static explicit operator long?(BElement value)
+        {
+            if (value == null)
+            {
+                return null;
+            }
+
+            if (value is BNumber)
+            {
+                return ( (BNumber)value).Value;
+            }
+
+            throw new FormatException();
+        }
+
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="FormatException"></exception>
+        /// 
         public static explicit operator long(BElement value)
         {
+            if (value == null)
+            {
+                throw new ArgumentNullException(nameof(value) );
+            }
+
             if (value is BNumber)
             {
                 return ( (BNumber)value).Value;

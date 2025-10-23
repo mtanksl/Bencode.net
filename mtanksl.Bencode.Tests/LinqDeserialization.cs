@@ -6,14 +6,6 @@ namespace mtanksl.Bencode.Tests
     public sealed class LinqDeserialization
     {
         [TestMethod]
-        public void TestLinq()
-        {
-            var value = (BElement)BencodeConvert.DeserializeObject("d5:key 10:5:key 211:Hello World5:key 3i9223372036854775807e5:key 4l0:11:Hello Worldi9223372036854775807eee");
-
-            Assert.AreEqual("Hello World", (string)value["key 4"][1] );
-        }
-
-        [TestMethod]
         public void TestEmptyString()
         {
             var value = BencodeConvert.DeserializeObject<BString>("0:");
@@ -57,6 +49,14 @@ namespace mtanksl.Bencode.Tests
             Assert.AreEqual(1, value.Count);
             
             Assert.AreEqual(9223372036854775807L, (long)value["Hello World"] );
+        }
+
+        [TestMethod]
+        public void TestLinq()
+        {
+            var value = (BElement)BencodeConvert.DeserializeObject("d5:key 10:5:key 211:Hello World5:key 3i9223372036854775807e5:key 4l0:11:Hello Worldi9223372036854775807eee");
+
+            Assert.AreEqual("Hello World", (string)value["key 4"][1] );
         }
     }
 }

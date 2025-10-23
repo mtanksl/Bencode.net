@@ -117,5 +117,61 @@ namespace mtanksl.Bencode.Tests
 
             Assert.AreEqual(9223372036854775807L, value["Hello World"] );
         }
+
+        [TestMethod]
+        public void TestListOfList()
+        {
+            var value = BencodeConvert.DeserializeObject<List<List<object>>>("ll11:Hello Worldi9223372036854775807eee");
+
+            Assert.AreEqual(1, value.Count);
+
+            Assert.AreEqual(2, value[0].Count);
+
+            Assert.AreEqual("Hello World", (string)(BString)value[0][0] );
+
+            Assert.AreEqual(9223372036854775807L, (long)(BNumber)value[0][1] );
+        }
+
+        [TestMethod]
+        public void TestListOfListOfBElement()
+        {
+            var value = BencodeConvert.DeserializeObject< List<List<BElement>>>("ll5:Hello5:Worldee");
+
+            Assert.AreEqual(1, value.Count);
+
+            Assert.AreEqual(2, value[0].Count);
+
+            Assert.AreEqual("Hello", (string)(BString)value[0][0] );
+
+            Assert.AreEqual("World", (string)(BString)value[0][1] );
+        }
+
+        [TestMethod]
+        public void TestListOfListOfBString()
+        {
+            var value = BencodeConvert.DeserializeObject< List<List<BString>>>("ll5:Hello5:Worldee");
+
+            Assert.AreEqual(1, value.Count);
+
+            Assert.AreEqual(2, value[0].Count);
+
+            Assert.AreEqual("Hello", (string)value[0][0] );
+
+            Assert.AreEqual("World", (string)value[0][1] );
+        }
+
+        [TestMethod]
+        public void TestListOfListOfString()
+        {
+            var value = BencodeConvert.DeserializeObject< List<List<string>>>("ll5:Hello5:Worldee");
+
+            Assert.AreEqual(1, value.Count);
+
+            Assert.AreEqual(2, value[0].Count);
+
+            Assert.AreEqual("Hello", value[0][0] );
+
+            Assert.AreEqual("World", value[0][1] );
+        }
     }
 }

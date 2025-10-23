@@ -21,11 +21,12 @@ namespace mtanksl.Bencode.Linq
         {
             get
             {
-                return Value[key];
-            }
-            set
-            {
-                Value[key] = value;
+                if (Value.TryGetValue(key, out var value) )
+                {
+                    return value;
+                }
+
+                return null;
             }
         }
 

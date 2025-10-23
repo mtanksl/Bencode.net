@@ -44,5 +44,13 @@ namespace mtanksl.Bencode.Tests
 
             Assert.AreEqual("d11:Hello Worldi9223372036854775807ee", bencode);
         }
+
+        [TestMethod]
+        public void TestListOfList()
+        {
+            var bencode = BencodeConvert.SerializeObject(new List<List<object>>() { new List<object>() { "Hello World", 9223372036854775807L } } );
+
+            Assert.AreEqual("ll11:Hello Worldi9223372036854775807eee", bencode);
+        }
     }
 }

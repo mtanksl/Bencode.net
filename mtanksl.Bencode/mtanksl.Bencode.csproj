@@ -12,9 +12,9 @@
     <Description>An implementation in C# of B-encode format that is used by the peer-to-peer file sharing system BitTorrent.</Description>
     <Copyright>2025 mtanksl</Copyright>
     <PackageTags>bencode bittorrent csharp implementation serialization deserialization</PackageTags>
-    <Version>1.0.1.0</Version>
-    <AssemblyVersion>1.0.1.0</AssemblyVersion>
-    <FileVersion>1.0.1.0</FileVersion>
+    <Version>1.0.2.0</Version>
+    <AssemblyVersion>1.0.2.0</AssemblyVersion>
+    <FileVersion>1.0.2.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>

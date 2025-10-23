@@ -52,3 +52,5 @@ string helloWorld = (string)value["key 4"][1];
 ```
 
 This will return the following string: `"Hello World"`
+
+*(See the Tests project for more examples)*

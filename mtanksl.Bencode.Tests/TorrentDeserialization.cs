@@ -1,4 +1,5 @@
 ﻿using mtanksl.Bencode.Linq;
+using System;
 using System.IO;
 using System.Text;
 
@@ -8,7 +9,7 @@ namespace mtanksl.Bencode.Tests
     public sealed class TorrentDeserialization
     {
         [TestMethod]
-        public void TestTorrent()
+        public void TestTorrentLinq()
         {
             var torrent = File.ReadAllText("ubuntu-22.04.5-desktop-amd64.iso.torrent", Encoding.Latin1);
 
@@ -25,6 +26,24 @@ namespace mtanksl.Bencode.Tests
             Assert.AreEqual(1726164800L, (long)value["creation date"] );
 
             Assert.AreEqual(4, ( (BDictionary)value["info"] ).Count);
+        }
+
+        [TestMethod]
+        public void TestTorrentObject()
+        {
+            var torrent = File.ReadAllText("ubuntu-22.04.5-desktop-amd64.iso.torrent", Encoding.Latin1);
+
+            var value = BencodeConvert.DeserializeObject<Torrent>(torrent);
+
+            Assert.AreEqual("https://torrent.ubuntu.com/announce", value.Announce);
+
+            Assert.AreEqual(2, value.AnnounceLists.Count);
+
+            Assert.AreEqual("Ubuntu CD releases.ubuntu.com", value.Comment);
+
+            Assert.AreEqual("mktorrent 1.1", value.CreatedBy);
+
+            Assert.AreEqual(new DateTime(2024, 09, 12, 18, 13, 20, DateTimeKind.Utc), value.CreationDate);            
         }
     }
 }
