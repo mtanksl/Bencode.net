@@ -18,14 +18,37 @@ From [Wikipedia](https://en.wikipedia.org/wiki/Bencode):
 - Lists are encoded as `l<elements>e`
 - Dictionaries are encoded as `d<pairs>e`
 
+# Creating with LINQ
+
+```C#
+BElement value = 
+    new BDictionary(
+        new BPair("key 1", ""),
+        new BPair("key 3", 9223372036854775807L),
+        new BPair("key 2", "Hello World"),
+        new BPair("key 4", new BList("", "Hello World", 9223372036854775807L) ) );
+```
+
 # How to serialize an object
 
 ```C#
-string bencode = BencodeConvert.SerializeObject(value)
+string bencode = BencodeConvert.SerializeObject(value); 
 ```
+
+This will generate the following string: 
+
+`"d5:key 10:5:key 211:Hello World5:key 3i9223372036854775807e5:key 4l0:11:Hello Worldi9223372036854775807eee"`
 
 # How to deserialize an object
 
 ```C#
-object value = BencodeConvert.DeserializeObject(bencode);
+BElement value = (BElement)BencodeConvert.DeserializeObject(bencode);
 ```
+
+# Querying
+
+```C#
+string helloWorld = (string)value["key 4"][1];
+```
+
+This will return the following string: `"Hello World"`

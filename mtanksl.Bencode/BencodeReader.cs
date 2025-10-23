@@ -1,4 +1,5 @@
-﻿using System;
+﻿using mtanksl.Bencode.Linq;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -116,41 +117,23 @@ namespace mtanksl.Bencode
 
                 return value;
             }
-            else if (type == typeof(string) )
+            else if (type == typeof(BString) )
             {
-                return ReadString();
+                return new BString(ReadString() );
             }
-            else if (type == typeof(sbyte) || type == typeof(byte) || type == typeof(short) || type == typeof(ushort) || type == typeof(int) || type == typeof(uint) || type == typeof(long) || type == typeof(ulong) )
+            else if (type == typeof(BNumber) )
             {
-                return ReadInteger();
+                return new BNumber(ReadNumber() );
             }
-            else if (typeof(IList).IsAssignableFrom(type) )
+            else if (type == typeof(BList) )
             {
-                if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>) )
-                {
-                    var genericArguments = type.GetGenericArguments();
-
-                    return ReadList(genericArguments[0] );
-                }
-                else
-                {
-                    return ReadList(typeof(object) );
-                }
+                return new BList( (IList<BElement>)ReadList(typeof(BElement) ) );
             }
-            else if (typeof(IDictionary).IsAssignableFrom(type) )
+            else if (type == typeof(BDictionary) )
             {
-                if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(SortedDictionary<,>) )
-                {
-                    var genericArguments = type.GetGenericArguments();
-
-                    return ReadDictionary(genericArguments[1] );
-                }
-                else
-                {
-                    return ReadDictionary(typeof(object) );
-                }
+                return new BDictionary( (IDictionary<BString, BElement>)ReadDictionary(typeof(BString), typeof(BElement) ) );
             }
-            else
+            else if (type == typeof(BElement) || type == typeof(object) )
             {
                 switch (Peek() )
                 {
@@ -165,25 +148,43 @@ namespace mtanksl.Bencode
                     case '8':
                     case '9':
 
-                        return ReadString();
+                        return new BString(ReadString() );
 
                     case 'i':
 
-                        return ReadInteger();
+                        return new BNumber(ReadNumber() );
 
                     case 'l':
 
-                        return ReadList(typeof(object) );
+                        return new BList( (IList<BElement>)ReadList(typeof(BElement) ) );
 
                     case 'd':
 
-                        return ReadDictionary(typeof(object) );
-
-                    default:
-
-                        throw new BencodeException("Invalid type.");
+                        return new BDictionary( (IDictionary<BString, BElement>)ReadDictionary(typeof(BString), typeof(BElement) ) );
                 }
             }
+            else if (type == typeof(string) )
+            {
+                return ReadString();
+            }
+            else if (type == typeof(sbyte) || type == typeof(byte) || type == typeof(short) || type == typeof(ushort) || type == typeof(int) || type == typeof(uint) || type == typeof(long) || type == typeof(ulong) )
+            {
+                return Convert.ChangeType(ReadNumber(), type);
+            }
+            else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>) )
+            {
+                var genericArguments = type.GetGenericArguments();
+
+                return ReadList(genericArguments[0] );
+            }
+            else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(SortedDictionary<,>) )
+            { 
+                var genericArguments = type.GetGenericArguments();
+
+                return ReadDictionary(genericArguments[0], genericArguments[1] );
+            }
+                                 
+            throw new BencodeException("Invalid type.");
         }
 
         /// <exception cref="BencodeException"></exception>
@@ -200,7 +201,7 @@ namespace mtanksl.Bencode
 
         /// <exception cref="BencodeException"></exception>
         /// 
-		public long ReadInteger()
+		public long ReadNumber()
 		{
             if (Read() == 'i' && long.TryParse(ReadUntil('e'), out var value) )
             {
@@ -213,9 +214,9 @@ namespace mtanksl.Bencode
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="BencodeException"></exception>
         /// 
-        public List<T> ReadList<T>()
+        public IList<T> ReadList<T>()
         {
-            return (List<T>)ReadList(typeof(T) );
+            return (IList<T>)ReadList(typeof(T) );
         }
 
         /// <exception cref="ArgumentNullException"></exception>
@@ -248,28 +249,33 @@ namespace mtanksl.Bencode
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="BencodeException"></exception>
         /// 
-        public SortedDictionary<string, T> ReadDictionary<T>()
+        public IDictionary<TKey, TValue> ReadDictionary<TKey, TValue>()
         {
-            return (SortedDictionary<string, T>)ReadDictionary(typeof(T) );
+            return (IDictionary<TKey, TValue>)ReadDictionary(typeof(TKey), typeof(TValue) );
         }
 
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="BencodeException"></exception>
         /// 
-        public IDictionary ReadDictionary(Type type)
+        public IDictionary ReadDictionary(Type typeKey, Type typeValue)
         {
-            if (type == null)
+            if (typeKey == null)
             {
-                throw new ArgumentNullException(nameof(type) );
+                throw new ArgumentNullException(nameof(typeKey) );
+            }
+
+            if (typeValue == null)
+            {
+                throw new ArgumentNullException(nameof(typeValue) );
             }
 
             if (Read() == 'd')
             {
-                var value = (IDictionary)Activator.CreateInstance( typeof(SortedDictionary<,>).MakeGenericType(typeof(string), type) );
+                var value = (IDictionary)Activator.CreateInstance( typeof(SortedDictionary<,>).MakeGenericType(typeKey, typeValue) );
 
                 while (Peek() != 'e')
                 {
-                    value.Add(ReadString(), ReadObject(type) );
+                    value.Add(ReadObject(typeKey), ReadObject(typeValue) );
                 }
 
                 Read();

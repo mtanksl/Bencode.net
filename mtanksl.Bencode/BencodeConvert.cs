@@ -1,4 +1,5 @@
-﻿using System;
+﻿using mtanksl.Bencode.Linq;
+using System;
 using System.IO;
 
 namespace mtanksl.Bencode

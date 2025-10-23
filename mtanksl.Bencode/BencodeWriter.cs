@@ -1,4 +1,5 @@
-﻿using System;
+﻿using mtanksl.Bencode.Linq;
+using System;
 using System.Collections;
 using System.IO;
 
@@ -36,13 +37,29 @@ namespace mtanksl.Bencode
             {
                 ( (IBencodeSerializable)value).Write(this);
             }
+            else if (type == typeof(BString) )
+            {
+                WriteString( ( (BString)value).Value);
+            }
+            else if (type == typeof(BNumber) )
+            {
+                WriteNumber( ( (BNumber)value).Value);
+            }
+            else if (type == typeof(BList) )
+            {
+                WriteList( ( (BList)value).Value);
+            }
+            else if (type == typeof(BDictionary) )
+            {
+                WriteDictionary( ( (BDictionary)value).Value);
+            }
             else if (type == typeof(string) )
             {
                 WriteString( (string)value);
             }
             else if (type == typeof(sbyte) || type == typeof(byte) || type == typeof(short) || type == typeof(ushort) || type == typeof(int) || type == typeof(uint) || type == typeof(long) || type == typeof(ulong) )
             {
-                WriteInteger( (long)value);
+                WriteNumber( (long)value);
             }
             else if (typeof(IList).IsAssignableFrom(type) )
             {
@@ -54,7 +71,7 @@ namespace mtanksl.Bencode
             }
             else
             {
-                throw new NotSupportedException("Only string, integers, IList, IDicionary and IBencodeSerializable are supported.");
+                throw new NotSupportedException();
             }
         }
 
@@ -70,7 +87,7 @@ namespace mtanksl.Bencode
             }
         }
 
-        public void WriteInteger(long value)
+        public void WriteNumber(long value)
         {
             textWriter.Write("i" + value + "e");
         }

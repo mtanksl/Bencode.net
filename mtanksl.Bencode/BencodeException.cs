@@ -4,8 +4,12 @@ namespace mtanksl.Bencode
 {
     public class BencodeException : Exception
     {
-        public BencodeException() { }
+        public BencodeException()
+        {
+        }
 
-        public BencodeException(string message) : base(message) { }
+        public BencodeException(string message) : base(message)
+        {
+        }
     }
 }
