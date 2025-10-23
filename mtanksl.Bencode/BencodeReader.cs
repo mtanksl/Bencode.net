@@ -139,15 +139,15 @@ namespace mtanksl.Bencode
             }
             else if (typeof(IDictionary).IsAssignableFrom(type) )
             {
-                if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>) )
+                if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(SortedDictionary<,>) )
                 {
                     var genericArguments = type.GetGenericArguments();
 
-                    return ReadDictionary(genericArguments[0], genericArguments[1] );
+                    return ReadDictionary(genericArguments[1] );
                 }
                 else
                 {
-                    return ReadDictionary(typeof(object), typeof(object) );
+                    return ReadDictionary(typeof(object) );
                 }
             }
             else
@@ -177,11 +177,11 @@ namespace mtanksl.Bencode
 
                     case 'd':
 
-                        return ReadDictionary(typeof(object), typeof(object) );
+                        return ReadDictionary(typeof(object) );
 
                     default:
 
-                        throw new BencodeException("Invalid token.");
+                        throw new BencodeException("Invalid type.");
                 }
             }
         }
@@ -248,33 +248,28 @@ namespace mtanksl.Bencode
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="BencodeException"></exception>
         /// 
-        public Dictionary<TKey, TValue> ReadDictionary<TKey, TValue>()
+        public SortedDictionary<string, T> ReadDictionary<T>()
         {
-            return (Dictionary<TKey, TValue>)ReadDictionary(typeof(TKey), typeof(TValue) );
+            return (SortedDictionary<string, T>)ReadDictionary(typeof(T) );
         }
 
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="BencodeException"></exception>
         /// 
-        public IDictionary ReadDictionary(Type typeKey, Type typeValue)
+        public IDictionary ReadDictionary(Type type)
         {
-            if (typeKey == null)
+            if (type == null)
             {
-                throw new ArgumentNullException(nameof(typeKey) );
-            }
-
-            if (typeValue == null)
-            {
-                throw new ArgumentNullException(nameof(typeValue) );
+                throw new ArgumentNullException(nameof(type) );
             }
 
             if (Read() == 'd')
             {
-                var value = (IDictionary)Activator.CreateInstance( typeof(Dictionary<,>).MakeGenericType(typeKey, typeValue) );
+                var value = (IDictionary)Activator.CreateInstance( typeof(SortedDictionary<,>).MakeGenericType(typeof(string), type) );
 
                 while (Peek() != 'e')
                 {
-                    value.Add(ReadObject(typeKey), ReadObject(typeValue) );
+                    value.Add(ReadString(), ReadObject(type) );
                 }
 
                 Read();

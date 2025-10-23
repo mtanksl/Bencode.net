@@ -40,7 +40,7 @@ namespace mtanksl.Bencode.Tests
         [TestMethod]
         public void TestDictionary()
         {
-            var bencode = BencodeConvert.SerializeObject(new Dictionary<object, object>() { ["Hello World"] = 9223372036854775807L } );
+            var bencode = BencodeConvert.SerializeObject(new SortedDictionary<string, object>() { ["Hello World"] = 9223372036854775807L } );
 
             Assert.AreEqual("d11:Hello Worldi9223372036854775807ee", bencode);
         }

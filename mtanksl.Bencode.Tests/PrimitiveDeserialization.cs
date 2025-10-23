@@ -44,7 +44,7 @@ namespace mtanksl.Bencode.Tests
         [TestMethod]
         public void TestDictionary()
         {
-            var value = BencodeConvert.DeserializeObject<Dictionary<object, object>>("d11:Hello Worldi9223372036854775807ee");
+            var value = BencodeConvert.DeserializeObject<SortedDictionary<string, object>>("d11:Hello Worldi9223372036854775807ee");
 
             Assert.AreEqual(1, value.Count);
             
