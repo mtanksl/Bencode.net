@@ -166,7 +166,9 @@ namespace mtanksl.Bencode
                     value.Add(ReadObject() );
                 }
 
-				return value;
+                Read();
+
+                return value;
             }
 
             throw new BencodeException();
@@ -185,7 +187,9 @@ namespace mtanksl.Bencode
                     value.Add(ReadObject(), ReadObject() );
                 }
 
-				return value;
+                Read();
+
+                return value;
             }
 
             throw new BencodeException();

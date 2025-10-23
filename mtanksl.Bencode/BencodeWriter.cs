@@ -8,6 +8,8 @@ namespace mtanksl.Bencode
     {
         private TextWriter textWriter;
 
+        /// <exception cref="ArgumentNullException"></exception>
+        /// 
         public BencodeWriter(TextWriter textWriter)
         {
             if (textWriter == null)
@@ -36,17 +38,17 @@ namespace mtanksl.Bencode
             {
                 WriteInteger( (long)value);
             }
-            else if (value is List<object>)
+            else if (value is IEnumerable<object>)
             {
-                WriteList( (List<object>)value);
+                WriteList( (IEnumerable<object>)value);
             }
-            else if (value is Dictionary<object, object>)
+            else if (value is IEnumerable<KeyValuePair<object, object>>)
             {
-                WriteDictionary( (Dictionary<object, object>)value);
+                WriteDictionary( (IEnumerable<KeyValuePair<object, object>>)value);
             }
             else
             {
-                throw new NotSupportedException();            
+                throw new NotSupportedException();
             }
         }
 
@@ -67,7 +69,7 @@ namespace mtanksl.Bencode
 
         /// <exception cref="ArgumentNullException"></exception>
         /// 
-        public void WriteList(List<object> value)
+        public void WriteList(IEnumerable<object> value)
         {
 			if (value == null)
 			{
@@ -86,7 +88,7 @@ namespace mtanksl.Bencode
 
         /// <exception cref="ArgumentNullException"></exception>
         /// 
-        public void WriteDictionary(Dictionary<object, object> value)
+        public void WriteDictionary(IEnumerable<KeyValuePair<object, object>> value)
         {
 			if (value == null)
 			{
