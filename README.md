@@ -1,4 +1,4 @@
-# B-encode
+# B-encode.net
 
 An implementation in C# of B-encode format that is used by the peer-to-peer file sharing system BitTorrent.
 
