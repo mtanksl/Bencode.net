@@ -32,12 +32,10 @@ BElement value =
 # How to serialize an object
 
 ```C#
-string bencode = BencodeConvert.SerializeObject(value); 
+string bencode = BencodeConvert.SerializeObject(value);
+
+// "d5:key 10:5:key 211:Hello World5:key 3i9223372036854775807e5:key 4l0:11:Hello Worldi9223372036854775807eee"
 ```
-
-This will generate the following string: 
-
-`"d5:key 10:5:key 211:Hello World5:key 3i9223372036854775807e5:key 4l0:11:Hello Worldi9223372036854775807eee"`
 
 # How to deserialize an object
 
@@ -45,12 +43,12 @@ This will generate the following string:
 BElement value = (BElement)BencodeConvert.DeserializeObject(bencode);
 ```
 
-# Querying
+# Querying with LINQ
 
 ```C#
 string helloWorld = (string)value["key 4"][1];
-```
 
-This will return the following string: `"Hello World"`
+// "Hello World"
+```
 
 *(See the Tests project for more examples)*
