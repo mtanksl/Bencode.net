@@ -64,7 +64,14 @@ namespace mtanksl.Bencode
             }
             else if (type == typeof(BString) )
             {
-                WriteByteString( ( (BString)value).Value);
+                if (value != null)
+                {
+                    WriteByteString( ( (BString)value).Value);
+                }
+                else
+                {
+                    WriteByteString(null);
+                }
             }
             else if (type == typeof(sbyte) || type == typeof(byte) || type == typeof(short) || type == typeof(ushort) || type == typeof(int) || type == typeof(uint) || type == typeof(long) || type == typeof(ulong) )
             {
@@ -76,7 +83,14 @@ namespace mtanksl.Bencode
             }
             else if (type == typeof(BNumber) )
             {
-                WriteInteger( ( (BNumber)value).Value);
+                if (value != null)
+                {
+                    WriteInteger( ( (BNumber)value).Value);
+                }
+                else
+                {
+                    WriteInteger(null);
+                }
             }
             else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>) )
             {
@@ -86,7 +100,14 @@ namespace mtanksl.Bencode
             }
             else if (type == typeof(BList) )
             {
-                WriteList( ( (BList)value).Value, typeof(BElement) );
+                if (value != null)
+                {
+                    WriteList( ( (BList)value).Value, typeof(BElement) );
+                }
+                else
+                {
+                    WriteList(null, typeof(BElement) );
+                }
             }
             else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(SortedDictionary<,>) )
             {
@@ -96,7 +117,14 @@ namespace mtanksl.Bencode
             }
             else if (type == typeof(BDictionary) )
             {
-                WriteDictionary( ( (BDictionary)value).Value, typeof(BString), typeof(BElement) );
+                if (value != null)
+                {
+                    WriteDictionary( ( (BDictionary)value).Value, typeof(BString), typeof(BElement) );
+                }
+                else
+                {
+                    WriteDictionary(null, typeof(BString), typeof(BElement) );
+                }
             }
             else if (WriteObjectHandler == null || !WriteObjectHandler(value, type) )
             {

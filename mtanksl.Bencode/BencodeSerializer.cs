@@ -1,5 +1,6 @@
 ﻿using mtanksl.Bencode.Linq;
 using System;
+using System.Linq;
 using System.Reflection;
 
 namespace mtanksl.Bencode
@@ -64,20 +65,20 @@ namespace mtanksl.Bencode
                     {
                         writer.WriteByte( (byte)'d');
 
-                        foreach (var propertyInfo in t.GetProperties() )
-                        {
-                            var propertyAttribute = propertyInfo.GetCustomAttribute<BencodePropertyAttribute>();
+                        var properties = t.GetProperties()
+                            .Select(p => new { PropertyInfo = p, PropertyAttribute = p.GetCustomAttribute<BencodePropertyAttribute>() } )
+                            .Where(a => a.PropertyAttribute != null)
+                            .OrderBy(a => a.PropertyAttribute.PropertyName ?? a.PropertyInfo.Name);
 
-                            if (propertyAttribute != null)
+                        foreach (var property in properties)
+                        {                            
+                            var propertyValue = property.PropertyInfo.GetValue(v);
+
+                            if (propertyValue != null || (propertyValue == null && settings.NullValueHandling == NullValueHandling.Include) )
                             {
-                                var propertyValue = propertyInfo.GetValue(v);
+                                writer.WriteObject(property.PropertyAttribute.PropertyName ?? property.PropertyInfo.Name, typeof(string) );
 
-                                if (propertyValue != null || (propertyValue == null && settings.NullValueHandling == NullValueHandling.Include) )
-                                {
-                                    writer.WriteObject(propertyAttribute.PropertyName ?? propertyInfo.Name, typeof(string) );
-
-                                    writer.WriteObject(propertyValue, propertyInfo.PropertyType);
-                                }
+                                writer.WriteObject(propertyValue, property.PropertyInfo.PropertyType);
                             }
                         }
 
