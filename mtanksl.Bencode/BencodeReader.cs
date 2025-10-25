@@ -207,6 +207,8 @@ namespace mtanksl.Bencode
                 {
                     return Convert.ChangeType(value.Value, type);
                 }
+
+                return 0;
             }
             else if (type == typeof(sbyte?) || type == typeof(byte?) || type == typeof(short?) || type == typeof(ushort?) || type == typeof(int?) || type == typeof(uint?) || type == typeof(long?) || type == typeof(ulong?) )
             {
