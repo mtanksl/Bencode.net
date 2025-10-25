@@ -1,13 +1,36 @@
 ﻿using System;
+using System.Text;
 
 namespace mtanksl.Bencode.Linq
 {
     public class BString : BElement, IComparable<BString>
     {
-        public BString(BString value) : this(value.Value)
+        /// <exception cref="ArgumentNullException"></exception>
+        /// 
+        public BString(BString value)
         {
+            if (value == null)
+            {
+                throw new ArgumentNullException(nameof(value) );
+            }
+
+            Value = value.Value;
         }
 
+        /// <exception cref="ArgumentNullException"></exception>
+        /// 
+        public BString(byte[] value)
+        {
+            if (value == null)
+            {
+                throw new ArgumentNullException(nameof(value) );
+            }
+
+            Value = value;
+        }
+
+        /// <exception cref="ArgumentNullException"></exception>
+        /// 
         public BString(string value)
         {
             if (value == null)
@@ -15,19 +38,39 @@ namespace mtanksl.Bencode.Linq
                 value = "";
             }
 
-            Value = value;
+            Value = Encoding.UTF8.GetBytes(value);
         }
 
-        public string Value { get; }
-
-        public override string ToString()
-        {
-            return Value.ToString();
-        }
+        public byte[] Value { get; }
 
         public int CompareTo(BString other)
         {
-            return Value.CompareTo(other.Value);
+            int length = Math.Min(Value.Length, other.Value.Length);
+
+            for (int i = 0; i < length; i++)
+            {
+                if (Value[i] < other.Value[i] )
+                {
+                    return -1;
+                }
+
+                if (Value[i] > other.Value[i] )
+                {
+                    return 1;
+                }
+            }
+
+            if (Value.Length < other.Value.Length)
+            {
+                return -1;
+            }
+
+            if (Value.Length > other.Value.Length)
+            {
+                return 1;
+            }
+
+            return 0;
         }
 
         public static implicit operator BString(string value)
@@ -36,6 +79,16 @@ namespace mtanksl.Bencode.Linq
         }
 
         public static explicit operator string(BString value)
+        {
+            if (value == null)
+            {
+                return null;
+            }
+
+            return Encoding.UTF8.GetString(value.Value);
+        }
+
+        public static explicit operator byte[](BString value)
         {
             if (value == null)
             {

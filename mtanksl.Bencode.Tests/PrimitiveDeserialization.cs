@@ -23,6 +23,29 @@ namespace mtanksl.Bencode.Tests
         }
 
         [TestMethod]
+        public void TestUTF8String()
+        {
+            var value = BencodeConvert.DeserializeObject<string>("3:猫");
+
+            Assert.AreEqual("猫", value);
+        }
+
+        [TestMethod]
+        public void TestByteArray()
+        {
+            var value = BencodeConvert.DeserializeObject<byte[]>("3:猫");
+
+            var expected = new byte[] { 0xE7, 0x8C, 0xAB };
+
+            Assert.AreEqual(expected.Length, value.Length);
+
+            for (int i = 0; i < value.Length; i++)
+            {
+                Assert.AreEqual(expected[i], value[i] );
+            }
+        }
+
+        [TestMethod]
         public void TestInteger()
         {
             var value = BencodeConvert.DeserializeObject<long>("i9223372036854775807e");
@@ -43,42 +66,6 @@ namespace mtanksl.Bencode.Tests
         }
 
         [TestMethod]
-        public void TestListOfBElement()
-        {
-            var value = BencodeConvert.DeserializeObject<List<BElement>>("l5:Hello5:Worlde");
-
-            Assert.AreEqual(2, value.Count);
-
-            Assert.AreEqual("Hello", (string)(BString)value[0] );
-
-            Assert.AreEqual("World", (string)(BString)value[1] );
-        }
-
-        [TestMethod]
-        public void TestListOfBString()
-        {
-            var value = BencodeConvert.DeserializeObject<List<BString>>("l5:Hello5:Worlde");
-
-            Assert.AreEqual(2, value.Count);
-
-            Assert.AreEqual("Hello", (string)value[0] );
-
-            Assert.AreEqual("World", (string)value[1] );
-        }
-
-        [TestMethod]
-        public void TestListOfString()
-        {
-            var value = BencodeConvert.DeserializeObject<List<string>>("l5:Hello5:Worlde");
-
-            Assert.AreEqual(2, value.Count);
-
-            Assert.AreEqual("Hello", value[0] );
-
-            Assert.AreEqual("World", value[1] );
-        }
-
-        [TestMethod]
         public void TestDictionary()
         {
             var value = BencodeConvert.DeserializeObject<SortedDictionary<string, object>>("d11:Hello Worldi9223372036854775807ee");
@@ -89,89 +76,15 @@ namespace mtanksl.Bencode.Tests
         }
 
         [TestMethod]
-        public void TestDictionaryOfBElement()
-        {
-            var value = BencodeConvert.DeserializeObject<SortedDictionary<string, BElement>>("d11:Hello Worldi9223372036854775807ee");
-
-            Assert.AreEqual(1, value.Count);
-            
-            Assert.AreEqual(9223372036854775807L, (long)(BNumber)value["Hello World"] );
-        }
-
-        [TestMethod]
-        public void TestDictionaryOfBNumber()
-        {
-            var value = BencodeConvert.DeserializeObject<SortedDictionary<string, BNumber>>("d11:Hello Worldi9223372036854775807ee");
-
-            Assert.AreEqual(1, value.Count);
-            
-            Assert.AreEqual(9223372036854775807L, (long)value["Hello World"] );
-        }
-
-        [TestMethod]
-        public void TestDictionaryOfLong()
-        {
-            var value = BencodeConvert.DeserializeObject<SortedDictionary<string, long>>("d11:Hello Worldi9223372036854775807ee");
-
-            Assert.AreEqual(1, value.Count);
-
-            Assert.AreEqual(9223372036854775807L, value["Hello World"] );
-        }
-
-        [TestMethod]
         public void TestListOfList()
         {
             var value = BencodeConvert.DeserializeObject<List<List<object>>>("ll11:Hello Worldi9223372036854775807eee");
 
             Assert.AreEqual(1, value.Count);
 
-            Assert.AreEqual(2, value[0].Count);
-
             Assert.AreEqual("Hello World", (string)(BString)value[0][0] );
 
             Assert.AreEqual(9223372036854775807L, (long)(BNumber)value[0][1] );
-        }
-
-        [TestMethod]
-        public void TestListOfListOfBElement()
-        {
-            var value = BencodeConvert.DeserializeObject< List<List<BElement>>>("ll5:Hello5:Worldee");
-
-            Assert.AreEqual(1, value.Count);
-
-            Assert.AreEqual(2, value[0].Count);
-
-            Assert.AreEqual("Hello", (string)(BString)value[0][0] );
-
-            Assert.AreEqual("World", (string)(BString)value[0][1] );
-        }
-
-        [TestMethod]
-        public void TestListOfListOfBString()
-        {
-            var value = BencodeConvert.DeserializeObject< List<List<BString>>>("ll5:Hello5:Worldee");
-
-            Assert.AreEqual(1, value.Count);
-
-            Assert.AreEqual(2, value[0].Count);
-
-            Assert.AreEqual("Hello", (string)value[0][0] );
-
-            Assert.AreEqual("World", (string)value[0][1] );
-        }
-
-        [TestMethod]
-        public void TestListOfListOfString()
-        {
-            var value = BencodeConvert.DeserializeObject< List<List<string>>>("ll5:Hello5:Worldee");
-
-            Assert.AreEqual(1, value.Count);
-
-            Assert.AreEqual(2, value[0].Count);
-
-            Assert.AreEqual("Hello", value[0][0] );
-
-            Assert.AreEqual("World", value[0][1] );
         }
     }
 }

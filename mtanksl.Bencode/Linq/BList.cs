@@ -52,6 +52,36 @@ namespace mtanksl.Bencode.Linq
             }
         }
 
+        public bool Contains(BElement value)
+        {
+            return Value.Contains(value);
+        }
+
+        public void Add(BElement value)
+        {
+            Value.Add(value);
+        }
+
+        public void Remove(BElement value)
+        {
+            Value.Remove(value);
+        }
+
+        public void Insert(int index, BElement value)
+        {
+            Value.Insert(index, value);
+        }
+
+        public void RemoveAt(int index)
+        {
+            Value.RemoveAt(index);
+        }
+
+        public void Clear()
+        {
+            Value.Clear();
+        }
+
         //TODO: Implement IList interface
     }
 }

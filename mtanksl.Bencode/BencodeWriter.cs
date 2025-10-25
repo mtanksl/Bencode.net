@@ -1,75 +1,104 @@
 ﻿using mtanksl.Bencode.Linq;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
+using System.Text;
 
 namespace mtanksl.Bencode
 {
     public class BencodeWriter : IDisposable
     {
-        private TextWriter textWriter;
+        private Stream stream;
 
-        /// <exception cref="ArgumentNullException"></exception>
-        /// 
-        public BencodeWriter(TextWriter textWriter)
-        {
-            if (textWriter == null)
-			{
-				throw new ArgumentNullException(nameof(textWriter) );
-			}
-
-            this.textWriter = textWriter;
-        }
+        private HashSet<object> references = new HashSet<object>();
 
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="NotSupportedException"></exception>
         /// 
-        public void WriteObject(object value)
+        public BencodeWriter(Stream stream)
         {
-            if (value == null)
+            if (stream == null)
+			{
+				throw new ArgumentNullException(nameof(stream) );
+			}
+
+            if ( !stream.CanWrite)
             {
-                throw new ArgumentNullException(nameof(value) );
+				throw new NotSupportedException();
             }
 
-            var type = value.GetType();
+            this.stream = stream;
+        }
 
-            if (typeof(IBencodeSerializable).IsAssignableFrom(type) )
-            {
-                ( (IBencodeSerializable)value).Write(this);
+        public void WriteByte(byte value)
+        {
+            stream.WriteByte(value);
+        }
+
+        internal Func<object, Type, bool> WriteObjectHandler { get; set; }
+
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="NotSupportedException"></exception>
+        /// <exception cref="BencodeException"></exception>
+        /// 
+        public void WriteObject(object value, Type type)
+        {
+            if (type == null)
+			{
+                throw new ArgumentNullException(nameof(type) );
             }
-            else if (type == typeof(BString) )
+            
+            if (value != null)
             {
-                WriteString( ( (BString)value).Value);
+                type = value.GetType();
             }
-            else if (type == typeof(BNumber) )
-            {
-                WriteNumber( ( (BNumber)value).Value);
-            }
-            else if (type == typeof(BList) )
-            {
-                WriteList( ( (BList)value).Value);
-            }
-            else if (type == typeof(BDictionary) )
-            {
-                WriteDictionary( ( (BDictionary)value).Value);
-            }
-            else if (type == typeof(string) )
+            
+            if (type == typeof(string) )
             {
                 WriteString( (string)value);
             }
+            else if (type == typeof(byte[] ) )
+            {
+                WriteByteString( (byte[] )value);
+            }
+            else if (type == typeof(BString) )
+            {
+                WriteByteString( ( (BString)value).Value);
+            }
             else if (type == typeof(sbyte) || type == typeof(byte) || type == typeof(short) || type == typeof(ushort) || type == typeof(int) || type == typeof(uint) || type == typeof(long) || type == typeof(ulong) )
             {
-                WriteNumber( (long)value);
+                WriteInteger( (long)value);
             }
-            else if (typeof(IList).IsAssignableFrom(type) )
+            else if (type == typeof(sbyte?) || type == typeof(byte?) || type == typeof(short?) || type == typeof(ushort?) || type == typeof(int?) || type == typeof(uint?) || type == typeof(long?) || type == typeof(ulong?) )
             {
-                WriteList( (IList)value);
+                WriteInteger( (long?)value);
             }
-            else if (typeof(IDictionary).IsAssignableFrom(type) )
-            {                                
-                WriteDictionary( (IDictionary)value);
+            else if (type == typeof(BNumber) )
+            {
+                WriteInteger( ( (BNumber)value).Value);
             }
-            else
+            else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>) )
+            {
+                var genericArguments = type.GetGenericArguments();
+
+                WriteList( (IList)value, genericArguments[0] );
+            }
+            else if (type == typeof(BList) )
+            {
+                WriteList( ( (BList)value).Value, typeof(BElement) );
+            }
+            else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(SortedDictionary<,>) )
+            {
+                var genericArguments = type.GetGenericArguments();
+
+                WriteDictionary( (IDictionary)value, genericArguments[0], genericArguments[1] );
+            }
+            else if (type == typeof(BDictionary) )
+            {
+                WriteDictionary( ( (BDictionary)value).Value, typeof(BString), typeof(BElement) );
+            }
+            else if (WriteObjectHandler == null || !WriteObjectHandler(value, type) )
             {
                 throw new NotSupportedException();
             }
@@ -77,61 +106,125 @@ namespace mtanksl.Bencode
 
         public void WriteString(string value)
         {
-			if (string.IsNullOrEmpty(value) )
-			{
-                textWriter.Write("0:");
-			}
+            if (string.IsNullOrEmpty(value) )
+            {
+                WriteByte( (byte)'0');
+
+                WriteByte( (byte)':');
+            }
             else
             {
-                textWriter.Write(value.Length + ":" + value);
+                WriteByteString(Encoding.UTF8.GetBytes(value) );
             }
         }
 
-        public void WriteNumber(long value)
+        public void WriteByteString(byte[] value)
         {
-            textWriter.Write("i" + value + "e");
-        }
-
-        public void WriteList(IList value)
-        {
-            textWriter.Write("l");
-
-            if (value != null)
+            if (value == null)
             {
+                WriteByte( (byte)'0');
+
+                WriteByte( (byte)':');
+            }
+            else
+            {
+                foreach (var item in value.Length.ToString() )
+                {
+                    WriteByte( (byte)item);
+                }
+
+                WriteByte( (byte)':');
+
                 foreach (var item in value)
                 {
-                    if (item != null)
-                    {
-                        WriteObject(item);
-                    }
+                    WriteByte(item);
                 }
             }
-
-            textWriter.Write("e");
         }
-        public void WriteDictionary(IDictionary value)
+
+        public void WriteInteger(long? value)
         {
-            textWriter.Write("d");
+            WriteByte( (byte)'i');
 
             if (value != null)
             {
-                foreach (var key in value.Keys)
+                foreach (var item in value.ToString() )
                 {
-                    if (key != null && value[key] != null)
-                    {
-                        WriteObject(key);
-                         
-                        WriteObject(value[key] );
-                    }
+                    WriteByte( (byte)item);
                 }
             }
 
-            textWriter.Write("e");
+            WriteByte( (byte)'e');
+        }
+
+        /// <exception cref="BencodeException"></exception>
+        /// 
+        public void WriteList(IList value, Type type)
+        {               
+            if (type == null)
+			{
+                throw new ArgumentNullException(nameof(type) );
+            }
+
+            WriteByte( (byte)'l');
+
+            if (value != null)
+            {
+                if (references.Contains(value) )
+                {
+                    throw new BencodeException("Loop encountered.");
+                }
+
+                references.Add(value);
+
+                foreach (var item in value)
+                {
+                    WriteObject(item, type);
+                }
+            }
+                
+            WriteByte( (byte)'e');
+        }
+
+        /// <exception cref="BencodeException"></exception>
+        /// 
+        public void WriteDictionary(IDictionary value, Type typeKey, Type typeValue)
+        {
+            if (typeKey == null)
+			{
+                throw new ArgumentNullException(nameof(typeKey) );
+            }
+
+            if (typeValue == null)
+			{
+                throw new ArgumentNullException(nameof(typeValue) );
+            }
+
+            WriteByte( (byte)'d');
+
+            if (value != null)
+            {
+                if (references.Contains(value) )
+                {
+                    throw new BencodeException("Loop encountered.");
+                }
+
+                references.Add(value);
+                                
+                foreach (var key in value.Keys)
+                {
+                    WriteObject(key, typeKey);
+                         
+                    WriteObject(value[key], typeValue);
+                }
+            }
+
+            WriteByte( (byte)'e');
         }
 
         public void Dispose()
         {
-            textWriter.Dispose();
+            stream.Dispose();
         }
     }
 }

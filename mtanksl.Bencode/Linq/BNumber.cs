@@ -4,8 +4,16 @@ namespace mtanksl.Bencode.Linq
 {
     public class BNumber : BElement
     {
-        public BNumber(BNumber value) : this(value.Value)
-        {            
+        /// <exception cref="ArgumentNullException"></exception>
+        /// 
+        public BNumber(BNumber value)
+        {
+            if (value == null)
+            {
+                throw new ArgumentNullException(nameof(value) );
+            }
+
+            Value = value.Value;
         }
 
         public BNumber(long value)
@@ -14,11 +22,6 @@ namespace mtanksl.Bencode.Linq
         }
 
         public long Value { get; }
-
-        public override string ToString()
-        {
-            return Value.ToString();
-        }
 
         public static implicit operator BNumber(long value)
         {

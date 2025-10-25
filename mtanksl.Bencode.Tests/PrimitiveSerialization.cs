@@ -22,6 +22,22 @@ namespace mtanksl.Bencode.Tests
         }
 
         [TestMethod]
+        public void TestUTF8String()
+        {
+            var bencode = BencodeConvert.SerializeObject("猫");
+       
+            Assert.AreEqual("3:猫", bencode);
+        }
+        
+        [TestMethod]
+        public void TestByteArray()
+        {
+            var bencode = BencodeConvert.SerializeObject(new byte[] { 0xE7, 0x8C, 0xAB } );
+
+            Assert.AreEqual("3:猫", bencode);
+        }
+
+        [TestMethod]
         public void TestInteger()
         {
             var bencode = BencodeConvert.SerializeObject(9223372036854775807L);

@@ -55,43 +55,46 @@ namespace mtanksl.Bencode.Tests
 
             var info = (BDictionary)value["info"];
 
-            Info = new TorrentInfo()
+            if (info != null)
             {
-                PieceLength = (long)info["piece length"],
+                Info = new TorrentInfo()
+                {
+                    PieceLength = (long)info["piece length"],
 
-                Pieces = (string)info["pieces"],
+                    Pieces = (byte[] )info["pieces"],
 
-                Private = (long?)info["private"],
+                    Private = (long?)info["private"],
 
-                Name = (string)info["name"],
+                    Name = (string)info["name"],
 
-                Length = (long?)info["length"],
+                    Length = (long?)info["length"],
 
-                MD5Sum = (string)info["md5sum"]
-            };
+                    MD5Sum = (string)info["md5sum"]
+                };
 
-            var files = (BList)info["files"];
+                var files = (BList)info["files"];
 
-            if (files != null)
-            {
-                Info.Files = files.Value
-                    .Cast<BDictionary>()
-                    .Select(item =>
-                    {
-                        var path = (BList)item["path"];
-
-                        return new TorrentInfoFile() 
+                if (files != null)
+                {
+                    Info.Files = files.Value
+                        .Cast<BDictionary>()
+                        .Select(item =>
                         {
-                            Length = (long)item["length"],
+                            var path = (BList)item["path"];
 
-                            MD5Sum = (string)item["md5sum"],
+                            return new TorrentInfoFile() 
+                            {
+                                Length = (long)item["length"],
+
+                                MD5Sum = (string)item["md5sum"],
                             
-                            Path = path == null ? null : path.Value
-                                .Cast<BString>()
-                                .Select(item2 => (string)item2)
-                                .ToList() };
-                    } )
-                    .ToList();
+                                Path = path == null ? null : path.Value
+                                    .Cast<BString>()
+                                    .Select(item2 => (string)item2)
+                                    .ToList() };
+                        } )
+                        .ToList();
+                }
             }
         }
 
@@ -105,7 +108,7 @@ namespace mtanksl.Bencode.Tests
     {
         public long PieceLength { get; set; }
 
-        public string Pieces { get; set; }
+        public byte[] Pieces { get; set; }
 
         public long? Private { get; set; }
 

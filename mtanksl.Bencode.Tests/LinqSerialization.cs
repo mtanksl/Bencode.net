@@ -22,6 +22,22 @@ namespace mtanksl.Bencode.Tests
         }
 
         [TestMethod]
+        public void TestUTF8String()
+        {
+            var bencode = BencodeConvert.SerializeObject(new BString("猫") );
+       
+            Assert.AreEqual("3:猫", bencode);
+        }
+        
+        [TestMethod]
+        public void TestByteArray()
+        {
+            var bencode = BencodeConvert.SerializeObject(new BString(new byte[] { 0xE7, 0x8C, 0xAB } ) );
+
+            Assert.AreEqual("3:猫", bencode);
+        }
+
+        [TestMethod]
         public void TestInteger()
         {
             var bencode = BencodeConvert.SerializeObject(new BNumber(9223372036854775807L) );
@@ -44,7 +60,15 @@ namespace mtanksl.Bencode.Tests
 
             Assert.AreEqual("d11:Hello Worldi9223372036854775807ee", bencode);
         }
-                        
+
+        [TestMethod]
+        public void TestListOfList()
+        {
+            var bencode = BencodeConvert.SerializeObject(new BList(new BList(new BString("Hello World"), new BNumber(9223372036854775807L) ) ) );
+
+            Assert.AreEqual("ll11:Hello Worldi9223372036854775807eee", bencode);
+        }
+
         [TestMethod]
         public void TestLinq()
         {

@@ -13,7 +13,7 @@ dotnet add package mtanksl.Bencode --version 1.0.2
 
 From [Wikipedia](https://en.wikipedia.org/wiki/Bencode):
 
-- Strings are encoded as `<length>:<string>`
+- Byte Strings are encoded as `<length>:<bytes>`
 - Integers are encoded as `i<integer>e`
 - Lists are encoded as `l<elements>e`
 - Dictionaries are encoded as `d<pairs>e`
@@ -37,11 +37,42 @@ string bencode = BencodeConvert.SerializeObject(value);
 // "d5:key 10:5:key 211:Hello World5:key 3i9223372036854775807e5:key 4l0:11:Hello Worldi9223372036854775807eee"
 ```
 
+or
+
+```C#
+using (var stream = File.OpenWrite("...") )
+{
+    using (var writer = new BencodeWriter(stream) )
+    {
+        var serializer = new BencodeSerializer();
+
+        serializer.Serialize(writer, value);
+    }
+}
+```
+
 # How to deserialize an object
 
 ```C#
 BElement value = (BElement)BencodeConvert.DeserializeObject(bencode);
 ```
+
+or
+
+```C#
+using (var stream = File.OpenRead("...") )
+{
+    using (var reader = new BencodeReader(stream) )
+    {
+        var serializer = new BencodeSerializer();
+
+        var value = (BElement)serializer.Deserialize(reader);
+
+        //...
+    }
+}
+```
+
 
 # Querying with LINQ
 

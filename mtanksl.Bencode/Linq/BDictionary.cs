@@ -57,6 +57,26 @@ namespace mtanksl.Bencode.Linq
             }
         }
 
+        public bool ContainsKey(BString key)
+        {
+            return Value.ContainsKey(key);
+        }
+
+        public void Add(BString key, BElement value)
+        {
+            Value.Add(key, value);
+        }
+
+        public void Remove(BString key)
+        {
+            Value.Remove(key);
+        }
+
+        public void Clear()
+        {
+            Value.Clear();
+        }
+
         //TODO: Implement IDicionary interface
     }
 

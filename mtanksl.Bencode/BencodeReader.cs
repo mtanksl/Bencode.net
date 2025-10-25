@@ -9,86 +9,164 @@ namespace mtanksl.Bencode
 {
     public class BencodeReader : IDisposable
     {
-		private TextReader textReader;
+        private Stream stream;
 
         /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="NotSupportedException"></exception>
         /// 
-        public BencodeReader(TextReader textReader)
+        public BencodeReader(Stream stream)
         {
-			if (textReader == null)
+			if (stream == null)
 			{
-				throw new ArgumentNullException(nameof(textReader) );
+				throw new ArgumentNullException(nameof(stream) );
 			}
 
-			this.textReader = textReader;
-        }
-
-        /// <exception cref="BencodeException"></exception>
-        /// 
-        private char Peek()
-        {
-            var value = textReader.Peek();
-
-            if (value == -1)
+            if ( !stream.CanRead)
             {
-                throw new BencodeException("End of stream.");
+				throw new NotSupportedException();
             }
 
-            return (char)value;
+			this.stream = stream;
         }
+
+        private byte? next;
 
         /// <exception cref="BencodeException"></exception>
         /// 
-        private char Read()
+        public byte PeekByte()
         {
-            var value = textReader.Read();
-
-            if (value == -1)
+            if (next == null)
             {
-                throw new BencodeException("End of stream.");
-            }
-
-            return (char)value;
-        }
-
-        /// <exception cref="BencodeException"></exception>
-        /// 
-        private string Read(int length)
-        {
-            var buffer = new char[length];
-
-            if (textReader.ReadBlock(buffer, 0, buffer.Length) != length)
-            {
-                throw new BencodeException("End of stream.");
-            }
-
-            return new string(buffer);
-        }
-
-        /// <exception cref="BencodeException"></exception>
-        /// 
-        private string ReadUntil(char character)
-        {
-            var stringBuilder = new StringBuilder();
-
-            while (true)
-            {
-                var value = textReader.Read();
+                var value = stream.ReadByte();
 
                 if (value == -1)
                 {
                     throw new BencodeException("End of stream.");
                 }
 
+                next = (byte)value;
+            }
+
+            return next.Value;
+        }
+
+        /// <exception cref="BencodeException"></exception>
+        /// 
+        public byte ReadByte()
+        {
+            if (next != null)
+            {
+                var buffer = next.Value; 
+                
+                    next = null;
+
+                return buffer;
+            }
+            else
+            {
+                var value = stream.ReadByte();
+
+                if (value == -1)
+                {
+                    throw new BencodeException("End of stream.");
+                }
+
+                return (byte)value;
+            }
+        }
+
+        /// <exception cref="BencodeException"></exception>
+        /// 
+        public byte[] ReadBytes(int length)
+        {
+            if (length == 0)
+            {
+                return Array.Empty<byte>();
+            }
+
+            if (next != null)
+            {
+                var buffer = new byte[length]; 
+                
+                    buffer[0] = next.Value; 
+                
+                    next = null;
+
+                int offset = 1;
+
+                int remaining = buffer.Length - 1;
+
+                while (remaining > 0)
+                {
+                    int read = stream.Read(buffer, offset, remaining);
+
+                    if (read == 0)
+                    {
+                        throw new BencodeException("End of stream.");
+                    }
+
+                    offset += read;
+
+                    remaining -= read;
+                }
+
+                return buffer;
+            }
+            else
+            {
+                var buffer = new byte[length];
+
+                int offset = 0;
+
+                int remaining = buffer.Length;
+
+                while (remaining > 0)
+                {
+                    int read = stream.Read(buffer, offset, remaining);
+
+                    if (read == 0)
+                    {
+                        throw new BencodeException("End of stream.");
+                    }
+
+                    offset += read;
+
+                    remaining -= read;
+                }
+
+                return buffer;
+            }
+        }
+
+        /// <exception cref="BencodeException"></exception>
+        /// 
+        public string ReadUntil(char character)
+        {
+            var stringBuilder = new StringBuilder();
+
+            while (true)
+            {
+                var value = (char)ReadByte();
+
                 if (value == character)
                 {
                     break;
                 }
 
-                stringBuilder.Append( (char)value);
+                stringBuilder.Append(value);
             }
 
             return stringBuilder.ToString();
+        }
+
+        internal Func<Type, object> ReadObjectHandler { get; set; }
+
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="BencodeException"></exception>
+        /// 
+        public object ReadObject()
+        {
+            return ReadObject(typeof(BElement) );
         }
 
         /// <exception cref="ArgumentNullException"></exception>
@@ -108,30 +186,42 @@ namespace mtanksl.Bencode
             {
 				throw new ArgumentNullException(nameof(type) );
             }
-
-            if (typeof(IBencodeSerializable).IsAssignableFrom(type) )
-            {
-                var value = (IBencodeSerializable)Activator.CreateInstance(type);
-
-                value.Read(this);
-
-                return value;
-            }           
-            else if (type == typeof(string) )
+                                 
+            if (type == typeof(string) )
             {
                 return ReadString();
             }
+            else if (type == typeof(byte[] ) )
+            {
+                return ReadByteString();
+            }
             else if (type == typeof(BString) )
             {
-                return new BString(ReadString() );
+                return new BString(ReadByteString() );
             }
             else if (type == typeof(sbyte) || type == typeof(byte) || type == typeof(short) || type == typeof(ushort) || type == typeof(int) || type == typeof(uint) || type == typeof(long) || type == typeof(ulong) )
             {
-                return Convert.ChangeType(ReadNumber(), type);
+                var value = ReadInteger();
+
+                if (value != null)
+                {
+                    return Convert.ChangeType(value.Value, type);
+                }
+            }
+            else if (type == typeof(sbyte?) || type == typeof(byte?) || type == typeof(short?) || type == typeof(ushort?) || type == typeof(int?) || type == typeof(uint?) || type == typeof(long?) || type == typeof(ulong?) )
+            {
+                var value = ReadInteger();
+
+                if (value != null)
+                {
+                    return Convert.ChangeType(value.Value, Nullable.GetUnderlyingType(type) );
+                }
+
+                return null;
             }
             else if (type == typeof(BNumber) )
             {
-                return new BNumber(ReadNumber() );
+                return new BNumber(ReadInteger() );
             }
             else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>) )
             {
@@ -155,7 +245,7 @@ namespace mtanksl.Bencode
             }
             else if (type == typeof(object) || type == typeof(BElement) )
             {
-                switch (Peek() )
+                switch ( (char)PeekByte() )
                 {
                     case '0':
                     case '1':
@@ -168,11 +258,11 @@ namespace mtanksl.Bencode
                     case '8':
                     case '9':
 
-                        return new BString(ReadString() );
+                        return new BString(ReadByteString() );
 
                     case 'i':
 
-                        return new BNumber(ReadNumber() );
+                        return new BNumber(ReadInteger() );
 
                     case 'l':
 
@@ -183,6 +273,15 @@ namespace mtanksl.Bencode
                         return new BDictionary( (IDictionary<BString, BElement>)ReadDictionary(typeof(BString), typeof(BElement) ) );
                 }
             }
+            else if (ReadObjectHandler != null)
+            {
+                var value = ReadObjectHandler(type);
+
+                if (value != null)
+                {
+                    return value;
+                }
+            }
 
             throw new BencodeException("Invalid type.");
         }
@@ -190,25 +289,52 @@ namespace mtanksl.Bencode
         /// <exception cref="BencodeException"></exception>
         /// 
         public string ReadString()
-		{
-            if (int.TryParse(ReadUntil(':'), out var length) && length >= 0)
-            {
-                return Read(length);
-            }
-
-            throw new BencodeException("Invalid string.");
+        {
+            return Encoding.UTF8.GetString(ReadByteString() );
         }
 
         /// <exception cref="BencodeException"></exception>
         /// 
-		public long ReadNumber()
+        public byte[] ReadByteString()
 		{
-            if (Read() == 'i' && long.TryParse(ReadUntil('e'), out var value) )
+            var digits = ReadUntil(':');
+
+            if (digits != "" && int.TryParse(digits, out var length) && length >= 0)
             {
-                return value;
+                return ReadBytes(length);
+            }
+
+            throw new BencodeException("Invalid byte string.");
+        }
+
+        /// <exception cref="BencodeException"></exception>
+        /// 
+		public long? ReadInteger()
+		{
+            if ( (char)ReadByte() == 'i')
+            {
+                var digits = ReadUntil('e');
+
+                if (digits == "")
+                {
+                    return null;
+                }
+
+                if (long.TryParse(digits, out var value) )
+                {
+                    return value;
+                }
             }
 
             throw new BencodeException("Invalid integer.");
+        }
+
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="BencodeException"></exception>
+        /// 
+        public IList ReadList()
+        {
+            return ReadList(typeof(BElement) );
         }
 
         /// <exception cref="ArgumentNullException"></exception>
@@ -229,21 +355,29 @@ namespace mtanksl.Bencode
                 throw new ArgumentNullException(nameof(type) );
             }
 
-            if (Read() == 'l')
+            if ( (char)ReadByte() == 'l')
             {
                 var value = (IList)Activator.CreateInstance( typeof(List<>).MakeGenericType(type) );
 
-                while (Peek() != 'e')
+                while ( (char)PeekByte() != 'e')
                 {
                     value.Add(ReadObject(type) );
                 }
 
-                Read();
+                ReadByte();
 
                 return value;
             }
 
             throw new BencodeException("Invalid list.");
+        }
+
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="BencodeException"></exception>
+        /// 
+        public IDictionary ReadDictionary()
+        {
+            return ReadDictionary(typeof(BString), typeof(BElement) );
         }
 
         /// <exception cref="ArgumentNullException"></exception>
@@ -269,16 +403,16 @@ namespace mtanksl.Bencode
                 throw new ArgumentNullException(nameof(typeValue) );
             }
 
-            if (Read() == 'd')
+            if ( (char)ReadByte() == 'd')
             {
                 var value = (IDictionary)Activator.CreateInstance( typeof(SortedDictionary<,>).MakeGenericType(typeKey, typeValue) );
 
-                while (Peek() != 'e')
+                while ( (char)PeekByte() != 'e')
                 {
                     value.Add(ReadObject(typeKey), ReadObject(typeValue) );
                 }
 
-                Read();
+                ReadByte();
 
                 return value;
             }
@@ -288,7 +422,7 @@ namespace mtanksl.Bencode
 
         public void Dispose()
         {
-            textReader.Dispose();
+            stream.Dispose();
         }
     }
 }

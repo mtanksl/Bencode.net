@@ -4,7 +4,7 @@ namespace mtanksl.Bencode.Tests
 {
     [TestClass]
     public sealed class LinqDeserialization
-    {
+    {              
         [TestMethod]
         public void TestEmptyString()
         {
@@ -21,6 +21,23 @@ namespace mtanksl.Bencode.Tests
             Assert.AreEqual("Hello World", (string)value);
         }
 
+
+
+        [TestMethod]
+        public void TestByteArray()
+        {
+            var value = BencodeConvert.DeserializeObject<BString>("3:猫");
+
+            var expected = new byte[] { 0xE7, 0x8C, 0xAB };
+
+            Assert.AreEqual(expected.Length, ( (byte[] )value).Length);
+
+            for (int i = 0; i < ( (byte[] )value).Length; i++)
+            {
+                Assert.AreEqual(expected[i], ( (byte[] )value)[i] );
+            }
+        }
+        
         [TestMethod]
         public void TestInteger()
         {
@@ -40,7 +57,7 @@ namespace mtanksl.Bencode.Tests
 
             Assert.AreEqual(9223372036854775807L, (long)value[1] );
         }
-
+        
         [TestMethod]
         public void TestDictionary()
         {
@@ -49,6 +66,18 @@ namespace mtanksl.Bencode.Tests
             Assert.AreEqual(1, value.Count);
             
             Assert.AreEqual(9223372036854775807L, (long)value["Hello World"] );
+        }
+
+        [TestMethod]
+        public void TestListOfList()
+        {
+            var value = BencodeConvert.DeserializeObject<BList>("ll11:Hello Worldi9223372036854775807eee");
+
+            Assert.AreEqual(1, value.Count);
+
+            Assert.AreEqual("Hello World", (string)(BString)value[0][0] );
+
+            Assert.AreEqual(9223372036854775807L, (long)(BNumber)value[0][1] );
         }
 
         [TestMethod]

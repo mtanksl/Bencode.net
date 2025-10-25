@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 
 namespace mtanksl.Bencode.Linq
 {
@@ -25,6 +26,23 @@ namespace mtanksl.Bencode.Linq
         public static explicit operator string(BElement value)
         {
             if (value == null)
+            {
+                return null;
+            }
+
+            if (value is BString)
+            {
+                return Encoding.UTF8.GetString( ( (BString)value).Value);
+            }
+
+            throw new FormatException();
+        }
+
+        /// <exception cref="FormatException"></exception>
+        /// 
+        public static explicit operator byte[](BElement value)
+        {
+           if (value == null)
             {
                 return null;
             }
