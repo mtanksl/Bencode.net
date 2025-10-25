@@ -1,8 +1,10 @@
-﻿namespace mtanksl.Bencode
+﻿using System.Collections.Generic;
+
+namespace mtanksl.Bencode
 {
     public class BencodeSerializerSettings
     {
-        public static readonly BencodeSerializerSettings Default = new BencodeSerializerSettings() { NullValueHandling = NullValueHandling.Ignore };
+        public List<BencodeConverter> Converters { get; set; }
 
         public NullValueHandling NullValueHandling { get; set; }
     }

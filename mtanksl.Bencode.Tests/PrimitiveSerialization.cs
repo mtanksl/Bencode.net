@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using mtanksl.Bencode.Converters;
+using System;
+using System.Collections.Generic;
 
 namespace mtanksl.Bencode.Tests
 {
@@ -53,6 +55,14 @@ namespace mtanksl.Bencode.Tests
             var bencode = BencodeConvert.SerializeObject(null, typeof(long?) );
 
             Assert.AreEqual("ie", bencode);
+        }
+
+        [TestMethod]
+        public void TestDateTime()
+        {
+            var bencode = BencodeConvert.SerializeObject(new DateTime(2024, 09, 12, 18, 13, 20, DateTimeKind.Utc), new BencodeSerializerSettings() { Converters = new List<BencodeConverter>() { new DateTimeConverter() } } );
+
+            Assert.AreEqual("i1726164800e", bencode);
         }
 
         [TestMethod]

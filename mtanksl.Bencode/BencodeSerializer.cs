@@ -7,15 +7,23 @@ namespace mtanksl.Bencode
 {
     public class BencodeSerializer
     {
-        private BencodeSerializerSettings settings;
-
         public BencodeSerializer() : this(null)
         {            
         }
 
         public BencodeSerializer(BencodeSerializerSettings settings)
         {
-            this.settings = settings ?? BencodeSerializerSettings.Default;
+            this.settings = settings ?? new BencodeSerializerSettings() { NullValueHandling = NullValueHandling.Ignore };
+        }
+
+        private BencodeSerializerSettings settings;
+
+        public BencodeSerializerSettings Settings
+        {
+            get
+            {
+                return settings;
+            }
         }
 
         /// <exception cref="ArgumentNullException"></exception>
@@ -54,21 +62,43 @@ namespace mtanksl.Bencode
                 {
                     if (typeof(IBencodeSerializable).IsAssignableFrom(t) )
                     {
-                        ( (IBencodeSerializable)v).Write(writer);
+                        ( (IBencodeSerializable)v).Write(writer, t, this);
 
                         return true;
                     }
 
-                    var objectAttribute = t.GetCustomAttribute<BencodeObjectAttribute>();
-
-                    if (objectAttribute != null)
+                    if (settings.Converters != null)
                     {
+                        foreach (var converter in settings.Converters)
+                        {
+                            if (converter.CanConvert(t) )
+                            {
+                                converter.Write(writer, v, t, this);
+
+                                return true;
+                            }
+                        }
+                    }
+
+                    var bencodeObjectAttribute = t.GetCustomAttribute<BencodeObjectAttribute>();
+
+                    if (bencodeObjectAttribute != null)
+                    {
+                        if (bencodeObjectAttribute.ItemConverterType != null)
+                        {
+                            var converter = (BencodeConverter)Activator.CreateInstance(bencodeObjectAttribute.ItemConverterType, bencodeObjectAttribute.ItemConverterParameters);
+
+                            converter.Write(writer, v, t, this);
+
+                            return true;
+                        }
+
                         writer.WriteByte( (byte)'d');
 
                         var properties = t.GetProperties()
-                            .Select(p => new { PropertyInfo = p, PropertyAttribute = p.GetCustomAttribute<BencodePropertyAttribute>() } )
-                            .Where(a => a.PropertyAttribute != null)
-                            .OrderBy(a => a.PropertyAttribute.PropertyName ?? a.PropertyInfo.Name);
+                            .Select(p => new { PropertyInfo = p, BencodePropertyAttribute = p.GetCustomAttribute<BencodePropertyAttribute>() } )
+                            .Where(a => a.BencodePropertyAttribute != null)
+                            .OrderBy(a => a.BencodePropertyAttribute.PropertyName ?? a.PropertyInfo.Name);
 
                         foreach (var property in properties)
                         {                            
@@ -76,9 +106,18 @@ namespace mtanksl.Bencode
 
                             if (propertyValue != null || (propertyValue == null && settings.NullValueHandling == NullValueHandling.Include) )
                             {
-                                writer.WriteObject(property.PropertyAttribute.PropertyName ?? property.PropertyInfo.Name, typeof(string) );
+                                writer.WriteObject(property.BencodePropertyAttribute.PropertyName ?? property.PropertyInfo.Name, typeof(string) );
 
-                                writer.WriteObject(propertyValue, property.PropertyInfo.PropertyType);
+                                if (property.BencodePropertyAttribute.ItemConverterType != null)
+                                {
+                                    var converter = (BencodeConverter)Activator.CreateInstance(property.BencodePropertyAttribute.ItemConverterType, property.BencodePropertyAttribute.ItemConverterParameters);
+
+                                    converter.Write(writer, propertyValue, property.PropertyInfo.PropertyType, this);
+                                }
+                                else
+                                {
+                                    writer.WriteObject(propertyValue, property.PropertyInfo.PropertyType);
+                                }
                             }
                         }
 
@@ -139,15 +178,33 @@ namespace mtanksl.Bencode
                     {
                         var value = (IBencodeSerializable)Activator.CreateInstance(t);
 
-                        value.Read(reader);
+                        value.Read(reader, t, this);
 
                         return value;
                     }
 
-                    var objectAttribute = t.GetCustomAttribute<BencodeObjectAttribute>();
-
-                    if (objectAttribute != null)
+                    if (settings.Converters != null)
                     {
+                        foreach (var converter in settings.Converters)
+                        {
+                            if (converter.CanConvert(t) )
+                            {
+                                return converter.Read(reader, t, this);
+                            }
+                        }
+                    }
+
+                    var bencodeObjectAttribute = t.GetCustomAttribute<BencodeObjectAttribute>();
+
+                    if (bencodeObjectAttribute != null)
+                    {
+                        if (bencodeObjectAttribute.ItemConverterType != null)
+                        {
+                            var converter = (BencodeConverter)Activator.CreateInstance(bencodeObjectAttribute.ItemConverterType, bencodeObjectAttribute.ItemConverterParameters);
+
+                            return converter.Read(reader, t, this);
+                        }
+
                         if ( (char)reader.ReadByte() == 'd')
                         {
                             var value = Activator.CreateInstance(t);
@@ -156,26 +213,24 @@ namespace mtanksl.Bencode
                             {
                                 var propertyName = (string)reader.ReadObject(typeof(string) );
 
-                                PropertyInfo p = null;
-
-                                foreach (var propertyInfo in t.GetProperties() )
+                                var property = t.GetProperties()
+                                    .Select(p => new { PropertyInfo = p, BencodePropertyAttribute = p.GetCustomAttribute<BencodePropertyAttribute>() } )
+                                    .Where(a => a.BencodePropertyAttribute != null &&
+                                                (a.BencodePropertyAttribute.PropertyName ?? a.PropertyInfo.Name) == propertyName)
+                                    .FirstOrDefault();
+                                
+                                if (property != null)
                                 {
-                                    var propertyAttribute = propertyInfo.GetCustomAttribute<BencodePropertyAttribute>();
-
-                                    if (propertyAttribute != null)
+                                    if (property.BencodePropertyAttribute.ItemConverterType != null)
                                     {
-                                        if (propertyName == (propertyAttribute.PropertyName ?? propertyInfo.Name) )
-                                        {
-                                            p = propertyInfo;
+                                        var converter = (BencodeConverter)Activator.CreateInstance(property.BencodePropertyAttribute.ItemConverterType, property.BencodePropertyAttribute.ItemConverterParameters);
 
-                                            break;
-                                        }
+                                        property.PropertyInfo.SetValue(value, converter.Read(reader, property.PropertyInfo.PropertyType, this) );
                                     }
-                                }
-
-                                if (p != null)
-                                {
-                                    p.SetValue(value, reader.ReadObject(p.PropertyType) );
+                                    else
+                                    {
+                                        property.PropertyInfo.SetValue(value, reader.ReadObject(property.PropertyInfo.PropertyType) );
+                                    }
                                 }
                                 else
                                 {

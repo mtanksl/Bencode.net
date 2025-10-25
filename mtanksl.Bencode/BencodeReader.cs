@@ -236,7 +236,7 @@ namespace mtanksl.Bencode
                 return new BList( (IList<BElement>)ReadList(typeof(BElement) ) );
             }
             else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(SortedDictionary<,>) )
-            { 
+            {
                 var genericArguments = type.GetGenericArguments();
 
                 return ReadDictionary(genericArguments[0], genericArguments[1] );

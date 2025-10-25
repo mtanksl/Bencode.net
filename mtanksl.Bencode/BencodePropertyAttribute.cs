@@ -24,5 +24,9 @@ namespace mtanksl.Bencode
                 return propertyName; 
             }
         }
+
+        public Type ItemConverterType { get; set; }
+
+        public object[] ItemConverterParameters { get; set; }
     }
 }

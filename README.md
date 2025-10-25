@@ -83,3 +83,47 @@ string helloWorld = (string)value["key 4"][1];
 ```
 
 *(See the Tests project for more examples)*
+
+# Custom Converter
+
+Create a custom converter by implementing an interface
+
+```C#
+public class MyDto : IBencodeSerializable
+{
+    public void Read(BencodeReader reader, Type type, BencodeSerializer serializer) { ... }
+        
+    public void Write(BencodeWriter writer, Type type, BencodeSerializer serializer) { ... }
+}
+```
+
+or by implementing a base class
+
+```C#
+public class MyConverter : BencodeConverter
+{
+    public override bool CanConvert(Type type) { ... }
+
+    public override object Read(BencodeReader reader, Type type, BencodeSerializer serializer) { ... }
+
+    public override void Write(BencodeWriter writer, object value, Type type, BencodeSerializer serializer) { ... }
+}
+```
+
+then using in the settings
+
+```C#
+new BencodeSerializerSettings() { Converters = new List<BencodeConverter>() { new DateTimeConverter() } }
+```
+
+or in the class attribute
+
+```C#
+[BencodeObject(ItemConverterType = typeof(TorrentConverter))]
+```
+
+or in the property attribute
+
+```C#
+[BencodeProperty(ItemConverterType = typeof(DateTimeConverter))]
+```
