@@ -46,6 +46,16 @@ namespace mtanksl.Bencode.Tests
         }
 
         [TestMethod]
+        public void TestNullableInteger()
+        {
+            // This scenario is ambiguous per the specification
+
+            var bencode = BencodeConvert.SerializeObject(null, typeof(long?) );
+
+            Assert.AreEqual("ie", bencode);
+        }
+
+        [TestMethod]
         public void TestList()
         {
             var bencode = BencodeConvert.SerializeObject(new List<object>() { "Hello World", 9223372036854775807L } );
