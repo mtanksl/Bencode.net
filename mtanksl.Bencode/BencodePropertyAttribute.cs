@@ -2,7 +2,7 @@
 
 namespace mtanksl.Bencode
 {
-    [AttributeUsage(AttributeTargets.Property, Inherited = false, AllowMultiple = true)]
+    [AttributeUsage(AttributeTargets.Property, Inherited = false, AllowMultiple = false)]
 
     public sealed class BencodePropertyAttribute : Attribute
     {
